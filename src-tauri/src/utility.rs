@@ -1,34 +1,19 @@
-use url::Url;
+pub const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-pub fn normalize_to_url(input: &str) -> Result<String, String> {
-    let trimmed = input.trim();
-
-    // If it already parses, return it
-    if let Ok(url) = Url::parse(trimmed) {
-        return Ok(url.to_string());
-    }
-
-    // Try adding https:// only if input is of the form *.*
-    if trimmed.contains('.') {
-        let with_scheme = format!("https://{}", trimmed);
-
-        match Url::parse(&with_scheme) {
-            Ok(url) => Ok(url.to_string()),
-            Err(_) => Err("Invalid URL".into()),
-        }
+pub fn project_root() -> std::path::PathBuf {
+    // In dev: resolves to src-tauri/  → go up one level to project root
+    // In release: resolves relative to the .exe location
+    if cfg!(debug_assertions) {
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("src-tauri")
+            .to_path_buf()
     } else {
-        Err("Invalid URL".into())
-    }
-}
-
-pub fn normalize_or_search(input: &str) -> String {
-    match normalize_to_url(input) {
-        Ok(url) => url,
-        Err(_) => {
-            format!(
-                "https://www.google.com/search?q={}",
-                urlencoding::encode(input)
-            )
-        }
+        std::env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf()
     }
 }

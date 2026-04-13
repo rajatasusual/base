@@ -1,31 +1,13 @@
-use tauri::{AppHandle, Manager};
-
-mod utility;
-use utility::normalize_or_search;
-
 use tauri::Emitter;
+use tauri_plugin_window_state::{Builder as WindowBuilder, StateFlags};
+
+mod commands;
+mod utility;
 
 #[derive(Clone, serde::Serialize)]
-struct Payload {
+struct SingleInstancePayload {
     args: Vec<String>,
     cwd: String,
-}
-
-#[tauri::command]
-fn open_url(app: AppHandle, input: &str) -> Result<(), String> {
-    let url_str = normalize_or_search(input);
-
-    let url = url_str
-        .parse()
-        .map_err(|e| format!("Invalid URL: {e}"))?;
-
-    let window = app
-        .get_webview_window("main")
-        .ok_or_else(|| "Main window not found".to_string())?;
-
-    window.navigate(url).map_err(|e| format!("Failed to navigate: {e}"))?;
-
-    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -33,11 +15,18 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             println!("{}, {argv:?}, {cwd}", app.package_info().name);
-            app.emit("single-instance", Payload { args: argv, cwd }).unwrap();
+            app.emit("single-instance", SingleInstancePayload { args: argv, cwd })
+                .unwrap();
         }))
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(
+            WindowBuilder::default()
+                .with_state_flags(StateFlags::all() & !StateFlags::DECORATIONS)
+                .build(),
+        )
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![open_url])
+        .invoke_handler(tauri::generate_handler![
+            commands::transcribe::transcribe,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
