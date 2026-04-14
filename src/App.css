@@ -10,6 +10,8 @@
   --muted:      rgba(232,233,240,0.38);
   --accent:     #e8ff6e;
   --accent-dim: rgba(232,255,110,0.15);
+  --secondary-accent: #6effc8;
+  --secondary-accent-dim: rgba(110,255,200,0.15);
   --danger:     #ff5f5f;
   --radius:     10px;
   --transition: 0.25s ease;
@@ -114,8 +116,8 @@ body {
   gap: 12px;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 48px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 48px);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 32px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 32px);
 }
 
 .output-area::-webkit-scrollbar { width: 4px; }
@@ -277,11 +279,13 @@ body {
 .transcript {
   width: 100%;
   max-width: 420px;
-  background: var(--surface);
+  background: var(--accent-dim);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px 20px;
+  margin-left: 20px;
   animation: slide-up 0.4s ease forwards;
+  transition: background var(--transition), border-color var(--transition);
 }
 
 .transcript label {
@@ -292,6 +296,7 @@ body {
   text-transform: uppercase;
   color: var(--accent);
   margin-bottom: 10px;
+  transition: color var(--transition);
 }
 
 .transcript p {
@@ -300,6 +305,40 @@ body {
   line-height: 1.7;
   color: var(--text);
   font-weight: 300;
+  transition: color var(--transition);
+}
+
+/* ── Answer ────────────────────────────────────────── */
+.answer {
+  width: 100%;
+  max-width: 420px;
+  background: var(--secondary-accent-dim);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-right: 20px;
+  padding: 16px 20px;
+  animation: slide-up 0.4s ease forwards;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.answer label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--secondary-accent);
+  margin-bottom: 10px;
+  transition: color var(--transition);
+}
+
+.answer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+  font-weight: 300;
+  transition: color var(--transition);
 }
 
 /* ── Error ──────────────────────────────────────────── */

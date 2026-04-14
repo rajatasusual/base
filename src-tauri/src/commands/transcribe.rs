@@ -8,11 +8,11 @@ use crate::utility::{project_root, CREATE_NO_WINDOW};
 #[tauri::command]
 pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
     let root = project_root();
-    let whisper_bin = root.join("third-party/whisper.cpp/whisper-cli.exe");
+    let whisper_cli = root.join("third-party/whisper.cpp/whisper-cli.exe");
     let model = root.join("third-party/whisper.cpp/model/ggml-base.en.bin");
 
-    if !whisper_bin.exists() {
-        return Err(format!("whisper-cli not found at: {}", whisper_bin.display()));
+    if !whisper_cli.exists() {
+        return Err(format!("whisper-cli not found at: {}", whisper_cli.display()));
     }
     if !model.exists() {
         return Err(format!("model not found at: {}", model.display()));
@@ -28,7 +28,7 @@ pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
         tmp.into_temp_path()
     };
 
-    let output = Command::new(&whisper_bin)
+    let output = Command::new(&whisper_cli)
         .args([
             "-m", model.to_str().unwrap(),
             "-f", tmp_path.to_str().unwrap(),
@@ -36,7 +36,7 @@ pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
         ])
         .creation_flags(CREATE_NO_WINDOW)
         .output()
-        .map_err(|e| format!("Failed to run whisper-cli: {e}\nPath: {}", whisper_bin.display()))?;
+        .map_err(|e| format!("Failed to run whisper-cli: {e}\nPath: {}", whisper_cli.display()))?;
 
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).to_string());
@@ -50,6 +50,5 @@ pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
         .trim()
         .to_string();
 
-    println!("{transcript}");
     Ok(transcript)
 }

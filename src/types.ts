@@ -1,1 +1,1 @@
-export type Status = "idle" | "recording" | "transcribing";
+export type Status = "idle" | "recording" | "transcribing" | "answering";

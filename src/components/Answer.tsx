@@ -2,7 +2,7 @@ import { useEffect, useRef } from "preact/hooks";
 
 type Props = { text: string };
 
-export function Transcript({ text }: Props) {
+export function Answer({ text }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -10,8 +10,8 @@ export function Transcript({ text }: Props) {
   }, [text]);
 
   return (
-    <div class="transcript" ref={ref}>
-      <label>You said:</label>
+    <div class="answer" ref={ref}>
+      <label>I said:</label>
       <p>{text}</p>
     </div>
   );
