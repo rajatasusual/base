@@ -1,0 +1,4 @@
+[submodule "src-tauri/third-party"]
+	path = src-tauri/third-party
+	url = https://github.com/rajatasusual/base-third-party
+	branch = master
