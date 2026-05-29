@@ -1,12 +1,14 @@
+use std::ffi::OsString;
 use std::io::Write;
-use std::os::windows::process::CommandExt;
-use std::process::Command;
 use tempfile::Builder;
 
-use crate::utility::{project_root, CREATE_NO_WINDOW};
+use crate::utility::{
+    command_for, configured_model_name, resolve_binary, resolve_model, third_party_dir,
+};
 
 #[tauri::command]
 pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
+    
     const MAX_WAV_BYTES: usize = 100 * 1024 * 1024; // 100 MB
     if wav.len() > MAX_WAV_BYTES {
         return Err(format!(
@@ -15,20 +17,18 @@ pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
             MAX_WAV_BYTES
         ));
     }
-    
-    let root = project_root();
-    let whisper_cli = root.join("third-party/whisper.cpp/whisper-cli.exe");
-    let model = root.join("third-party/whisper.cpp/model/ggml-base.en.bin");
 
-    if !whisper_cli.exists() {
-        return Err(format!(
-            "whisper-cli not found at: {}",
-            whisper_cli.display()
-        ));
+    let third_party = third_party_dir();
+    let whisper_cli = resolve_binary(&third_party, "whisper.cpp", &["whisper-cli", "main"])?;
+    let mut model_names = Vec::new();
+
+    if let Some(model_name) = configured_model_name(&third_party, "WHISPER_MODEL_NAME", "bin") {
+        model_names.push(model_name);
     }
-    if !model.exists() {
-        return Err(format!("model not found at: {}", model.display()));
-    }
+
+    model_names.push(OsString::from("ggml-base.en.bin"));
+
+    let model = resolve_model(&third_party, "whisper.cpp", &model_names)?;
 
     let tmp_path = {
         let mut tmp = Builder::new()
@@ -40,15 +40,12 @@ pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
         tmp.into_temp_path()
     };
 
-    let output = Command::new(&whisper_cli)
-        .args([
-            "-m",
-            model.to_str().unwrap(),
-            "-f",
-            tmp_path.to_str().unwrap(),
-            "--no-timestamps",
-        ])
-        .creation_flags(CREATE_NO_WINDOW)
+    let output = command_for(&whisper_cli)
+        .arg("-m")
+        .arg(&model)
+        .arg("-f")
+        .arg(tmp_path.as_os_str())
+        .arg("--no-timestamps")
         .output()
         .map_err(|e| {
             format!(

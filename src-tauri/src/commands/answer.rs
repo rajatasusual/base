@@ -1,39 +1,47 @@
-use std::os::windows::process::CommandExt;
-use std::process::Command;
+use std::ffi::OsString;
 
-use crate::utility::{project_root, CREATE_NO_WINDOW};
+use crate::utility::{
+    command_for, configured_model_name, resolve_binary, resolve_model, third_party_dir,
+};
 
 #[tauri::command]
 pub fn answer(prompt: String) -> Result<String, String> {
     if prompt.len() > 4096 {
         return Err("Prompt too long".to_string());
     }
-    let root = project_root();
-    let llama_cli = root.join("third-party/llama.cpp/llama-completion.exe");
-    let model = root.join("third-party/llama.cpp/model/gemma3-270m-it.gguf");
 
-    if !llama_cli.exists() {
-        return Err(format!("llama-cli not found at: {}", llama_cli.display()));
-    }
-    if !model.exists() {
-        return Err(format!("model not found at: {}", model.display()));
+    let third_party = third_party_dir();
+    let llama_cli = resolve_binary(
+        &third_party,
+        "llama.cpp",
+        &["llama-completion", "llama-cli"],
+    )?;
+    let mut model_names = Vec::new();
+
+    if let Some(model_name) = configured_model_name(&third_party, "LLAMA_MODEL_NAME", "gguf") {
+        model_names.push(model_name);
     }
 
-    let output = Command::new(&llama_cli)
-        .args([
-            "-m",
-            model.to_str().unwrap(),
-            "--cpu-strict",
-            "1",
-            "-t",
-            "0",
-            "-n",
-            "128",
-            "-p",
-            &prompt,
-            "-no-cnv",
-        ])
-        .creation_flags(CREATE_NO_WINDOW)
+    model_names.extend([
+        OsString::from("smollm2-360m-instruct-q8_0.gguf")
+    ]);
+
+    let model = resolve_model(&third_party, "llama.cpp", &model_names)?;
+
+    let output = command_for(&llama_cli)
+        .arg("-m")
+        .arg(&model)
+        .arg("--cpu-strict")
+        .arg("1")
+        .arg("-t")
+        .arg("2")
+        .arg("-n")
+        .arg("256")
+        .arg("--top-k")
+        .arg("2")
+        .arg("-p")
+        .arg(&prompt)
+        .arg("-no-cnv")
         .output()
         .map_err(|e| {
             format!(

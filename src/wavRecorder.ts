@@ -34,7 +34,7 @@ export function useWavRecorder() {
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    ctx = new AudioContext();
+    ctx = new AudioContext({sampleRate: 16000});
     await ctx.audioWorklet.addModule("/recorder-processor.js");
 
     src = ctx.createMediaStreamSource(stream);
