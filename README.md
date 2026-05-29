@@ -127,17 +127,16 @@ The built binary should end up at `src-tauri/third-party/llama.cpp/llama-complet
 
 #### 3.2 Download a model
 
-note: I prefer gemma3:270m for <500m SLM. You can choose any other.
+note: I prefer LFM2-1.2B for <1B SLM. You can choose any other. Update the versions.conf file with name and Download URL. You can run the command in src-tauri/third-party submodule to download the model.
 
 ```bash
-cd third-party/llama.cpp
-./model/download-ggml-model.sh gemma3-270m-it.gguf
+./download-models
 ```
 
-This places `gemma3-270m-it.gguf` in `third-party/llama.cpp/model/`. Move or symlink it to match the path in `transcribe.rs`:
+This places `LFM2-1.2B.gguf` in `third-party/llama.cpp/model/`. Move or symlink it to match the path in `transcribe.rs`:
 
 ```
-third-party/llama.cpp/model/gemma3-270m-it.gguf
+third-party/llama.cpp/model/LFM2-1.2B.gguf
 ```
 
 ---

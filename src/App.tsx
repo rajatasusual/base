@@ -10,7 +10,7 @@ import { Answer } from "./components/Answer";
 import { ErrorBox } from "./components/ErrorBox";
 import { Status } from "./types";
 
-import "./app.css";
+import "./App.css";
 
 export default function App() {
   const [status, setStatus] = useState<Status>("idle");
