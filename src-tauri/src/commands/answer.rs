@@ -5,12 +5,12 @@ use crate::utility::{
 };
 
 #[tauri::command]
-pub fn answer(prompt: String) -> Result<String, String> {
+pub fn answer(app: tauri::AppHandle, prompt: String) -> Result<String, String> {
     if prompt.len() > 4096 {
         return Err("Prompt too long".to_string());
     }
 
-    let third_party = third_party_dir();
+    let third_party = third_party_dir(&app);
     let llama_cli = resolve_binary(
         &third_party,
         "llama.cpp",

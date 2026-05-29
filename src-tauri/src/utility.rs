@@ -8,26 +8,20 @@ use std::{
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
+use tauri::Manager;
+
 #[cfg(target_os = "windows")]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-pub fn third_party_dir() -> std::path::PathBuf {
-    // In dev: resolves to src-tauri/  → go up one level to project root
-    // In release: resolves relative to the .exe location
+pub fn third_party_dir(app: &tauri::AppHandle) -> std::path::PathBuf {
     if cfg!(debug_assertions) {
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("src-tauri")
             .join("third-party")
-            .to_path_buf()
     } else {
-        std::env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
+        app.path()
+            .resource_dir()
+            .expect("failed to get resource dir")
             .join("third-party")
-            .to_path_buf()
     }
 }
 
@@ -40,12 +34,13 @@ pub fn resolve_binary(
 
     for binary_name in binary_names {
         let executable_name = executable_name(binary_name);
-        let direct_candidates = [
+
+        let candidates = [
             project_root.join("bin").join(&executable_name),
             project_root.join(&executable_name),
         ];
 
-        for candidate in direct_candidates {
+        for candidate in candidates {
             if candidate.is_file() {
                 return Ok(candidate);
             }
@@ -58,13 +53,7 @@ pub fn resolve_binary(
 
     let expected = binary_names
         .iter()
-        .map(|name| {
-            project_root
-                .join("bin")
-                .join(executable_name(name))
-                .display()
-                .to_string()
-        })
+        .map(|name| project_root.join("bin").join(executable_name(name)).display().to_string())
         .collect::<Vec<_>>()
         .join(", ");
 

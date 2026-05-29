@@ -7,7 +7,7 @@ use crate::utility::{
 };
 
 #[tauri::command]
-pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
+pub fn transcribe(app: tauri::AppHandle,wav: Vec<u8>) -> Result<String, String> {
     
     const MAX_WAV_BYTES: usize = 100 * 1024 * 1024; // 100 MB
     if wav.len() > MAX_WAV_BYTES {
@@ -18,7 +18,7 @@ pub fn transcribe(wav: Vec<u8>) -> Result<String, String> {
         ));
     }
 
-    let third_party = third_party_dir();
+    let third_party = third_party_dir(&app);
     let whisper_cli = resolve_binary(&third_party, "whisper.cpp", &["whisper-cli", "main"])?;
     let mut model_names = Vec::new();
 
